@@ -1,45 +1,163 @@
-## Spring Boot
+## Basic Mockito with Spring Boot ##
+Setup a basic REST api with 3 layers (controller, service and repository) and how to use Mockito to test for each layer.
 
-It's easy to use https://start.spring.io/ to generate a base structure for a Spring Boot project.
-
-The basic structure like this.
-
+### Dependency ###
 ```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-    <parent>
+<dependencies>
+    <dependency>
         <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.2.5.RELEASE</version>
-        <relativePath/> <!-- lookup parent from repository -->
-    </parent>
-    <groupId>com.hoangdieuctu.boot</groupId>
-    <artifactId>sample</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
-    <name>Sample</name>
-    <description>Spring Boot Sample</description>
+        <artifactId>spring-boot-starter</artifactId>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-test</artifactId>
+    </dependency>
+</dependencies>
+```
 
-    <properties>
-        <java.version>1.8</java.version>
-    </properties>
+### Coding ###
 
-    <dependencies>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter</artifactId>
-        </dependency>
-    </dependencies>
+1. UserController
+```java
+@RestController
+@RequestMapping("/user")
+public class UserController {
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-            </plugin>
-        </plugins>
-    </build>
+    @Autowired
+    private UserService userService;
 
-</project>
+    @GetMapping
+    @ResponseBody
+    public UserDto getUser(@RequestParam("name") String name) {
+        return userService.getUser(name);
+    }
+}
+```
+
+2. UserService
+```java
+@Service
+public class UserService {
+
+    @Autowired
+    private UserRepository userRepository;
+
+    public UserDto getUser(String name) {
+        User user = userRepository.findOne(name);
+        return convert(user);
+    }
+
+    private UserDto convert(User user) {
+        return new UserDto(user.getId(), user.getName());
+    }
+}
+```
+
+3. UserRepository
+```java
+@Repository
+public class UserRepository {
+
+    public User findOne(String name) {
+        User user = new User();
+        user.setId("1");
+        user.setName(name);
+
+        return user;
+    }
+}
+```
+
+4. User
+```java
+public class User {
+
+    private String id;
+    private String name;
+
+    // getters & setters
+}
+```
+
+5. UserDto
+```java
+public class UserDto {
+    private String id;
+    private String name;
+    private Long timestamp;
+
+    public UserDto(String id, String name) {
+        this.id = id;
+        this.name = name;
+        this.timestamp = System.currentTimeMillis();
+    }
+
+    // getters & setters
+}
+```
+
+### Unit Testing ###
+
+1. Test service layer: UserServiceTest
+
+The test run with MockitoJUnitRunner
+```
+@RunWith(MockitoJUnitRunner.class)
+```
+
+The class need to tested is UserService, so inject mock the service
+```
+@InjectMocks
+private UserService userService;
+```
+
+UserService use UserRepository as a dependency for getting user (from the database), mock the UserRepository class
+```
+@Mock
+private UserRepository userRepository;
+```
+
+I want to return a mock user, so just mock the User and setup for UserRepository
+```
+when(user.getId()).thenReturn("10");
+when(user.getName()).thenReturn("hoangdieuctu");
+
+when(userRepository.findOne("hoangdieuctu")).thenReturn(user);
+```
+
+The full test class
+```java
+@RunWith(MockitoJUnitRunner.class)
+public class UserServiceTest {
+
+    @InjectMocks
+    private UserService userService;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private User user;
+
+    @Before
+    public void setup() {
+        when(user.getId()).thenReturn("10");
+        when(user.getName()).thenReturn("hoangdieuctu");
+
+        when(userRepository.findOne("hoangdieuctu")).thenReturn(user);
+    }
+
+    @Test
+    public void testGetUser() {
+        UserDto found = userService.getUser("hoangdieuctu");
+        Assert.assertEquals("hoangdieuctu", found.getName());
+        Assert.assertEquals("10", found.getId());
+    }
+}
 ```
