@@ -1,6 +1,7 @@
 package com.hoangdieuctu.boot.sample.service;
 
 import com.hoangdieuctu.boot.sample.model.User;
+import com.hoangdieuctu.boot.sample.model.dto.UserDto;
 import com.hoangdieuctu.boot.sample.repository.UserRepository;
 import org.junit.Assert;
 import org.junit.Before;
@@ -34,7 +35,7 @@ public class UserServiceTest {
 
     @Test
     public void testGetUser() {
-        User found = userService.getUser("hoangdieuctu");
+        UserDto found = userService.getUser("hoangdieuctu");
         Assert.assertEquals("hoangdieuctu", found.getName());
         Assert.assertEquals("10", found.getId());
     }

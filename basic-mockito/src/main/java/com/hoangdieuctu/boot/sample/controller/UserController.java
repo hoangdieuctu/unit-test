@@ -1,6 +1,6 @@
 package com.hoangdieuctu.boot.sample.controller;
 
-import com.hoangdieuctu.boot.sample.model.User;
+import com.hoangdieuctu.boot.sample.model.dto.UserDto;
 import com.hoangdieuctu.boot.sample.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +14,7 @@ public class UserController {
 
     @GetMapping
     @ResponseBody
-    public User getUser(@RequestParam("name") String name) {
+    public UserDto getUser(@RequestParam("name") String name) {
         return userService.getUser(name);
     }
 }
