@@ -104,14 +104,14 @@ public class UserDto {
 
 ### Unit Testing ###
 
-1. Test service layer: UserServiceTest
+**Test service layer: UserServiceTest**
 
 The test run with MockitoJUnitRunner
 ```
 @RunWith(MockitoJUnitRunner.class)
 ```
 
-The class need to tested is UserService, so inject mock the service
+The class need to be tested is UserService, so inject mock the service
 ```
 @InjectMocks
 private UserService userService;
