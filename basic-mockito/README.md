@@ -107,24 +107,24 @@ public class UserDto {
 **Test service layer: UserServiceTest**
 
 The test run with MockitoJUnitRunner
-```
+```java
 @RunWith(MockitoJUnitRunner.class)
 ```
 
 The class need to be tested is UserService, so inject mock the service
-```
+```java
 @InjectMocks
 private UserService userService;
 ```
 
 UserService use UserRepository as a dependency for getting user (from the database), mock the UserRepository class
-```
+```java
 @Mock
 private UserRepository userRepository;
 ```
 
 I want to return a mock user, so just mock the User and setup for UserRepository
-```
+```java
 when(user.getId()).thenReturn("10");
 when(user.getName()).thenReturn("hoangdieuctu");
 
@@ -158,6 +158,60 @@ public class UserServiceTest {
         UserDto found = userService.getUser("hoangdieuctu");
         Assert.assertEquals("hoangdieuctu", found.getName());
         Assert.assertEquals("10", found.getId());
+    }
+}
+```
+
+**Test controller layer: UserControllerTest**
+It will similar with service layer, but we need to use MockMvc object to execute REST call.
+
+On setup method
+```java
+this.mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
+```
+
+The test method, execute the call and valid json response
+```java
+@Test
+public void testGetUser() throws Exception {
+    this.mockMvc.perform(get("/user?name=hoangdieuctu"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id", is("10")))
+            .andExpect(jsonPath("$.name", is("hoangdieuctu")))
+            .andExpect(jsonPath("$.timestamp", is(notNullValue())));
+}
+```
+
+The full class
+```java
+@RunWith(MockitoJUnitRunner.class)
+public class UserControllerTest {
+
+    @InjectMocks
+    private UserController userController;
+
+    @Mock
+    private UserService userService;
+
+    private MockMvc mockMvc;
+
+    private UserDto userDto;
+
+    @Before
+    public void setup() {
+        this.mockMvc = MockMvcBuilders.standaloneSetup(userController).build();
+
+        userDto = new UserDto("10", "hoangdieuctu");
+        when(userService.getUser("hoangdieuctu")).thenReturn(userDto);
+    }
+
+    @Test
+    public void testGetUser() throws Exception {
+        this.mockMvc.perform(get("/user?name=hoangdieuctu"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is("10")))
+                .andExpect(jsonPath("$.name", is("hoangdieuctu")))
+                .andExpect(jsonPath("$.timestamp", is(notNullValue())));
     }
 }
 ```
